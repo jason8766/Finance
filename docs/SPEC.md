@@ -101,7 +101,7 @@ US-only free tiers can't reach the futures API.
 
 | Option | Cost | Notes |
 |---|---|---|
-| **Oracle Cloud Always Free** (home region Seoul / Chuncheon / Tokyo) | $0 | Recommended first try. Asian region avoids the US block. Signup needs a card; ARM capacity in Asian regions can be scarce — the free AMD micro VM (1 GB) is enough for this workload. Home region can't be changed later. |
+| **Oracle Cloud Always Free** (home region Seoul / Chuncheon / Tokyo) | $0 | **Chosen.** Setup: [ORACLE_SETUP.md](ORACLE_SETUP.md). Asian region avoids the US block. Signup needs a card; ARM capacity in Asian regions can be scarce — the free AMD micro VM (1 GB) is enough for this workload. Home region can't be changed later. |
 | Home PC / Raspberry Pi in Korea | $0 (+electricity) | Korean IP works with Binance. Uptime depends on your machine and internet. |
 | Small VPS in Tokyo / Singapore | ~$4–6 / mo | Fallback if Oracle fails. Verify Binance reachability before committing. |
 | Fly.io / Railway / Render / Koyeb | — | No free always-on worker anymore; some regions blocked by Binance. |
