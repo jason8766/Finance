@@ -1,0 +1,10 @@
+[Unit]
+Description=Crypto Market Watch daily brief
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/Finance
+ExecStart=/home/ubuntu/Finance/.venv/bin/python -m marketwatch brief

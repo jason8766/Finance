@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily brief at 09:00 KST (00:00 UTC)
+
+[Timer]
+# 30s after the Binance daily candle closes, so yesterday's candle is final.
+OnCalendar=*-*-* 00:00:30 UTC
+# If the server was off at 09:00, send the brief as soon as it is back.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,5 @@
+anthropic>=2.3,<3
+httpx>=0.28,<1
+feedparser>=6.0,<7
+PyYAML>=6.0,<7
+python-dotenv>=1.0,<2

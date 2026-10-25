@@ -1,0 +1,52 @@
+# Crypto Market Watch configuration. Secrets live in ~/marketwatch-secrets/.env, not here.
+
+# Claude model that writes the news / risk sections of the daily brief.
+# claude-opus-5-5 (default) ~ $4 / $20 per 1M input/output tokens.
+# claude-haiku-5-5 (~$0.10/month vs ~$3-5/month) if cost matters more than writing quality.
+llm_model: claude-opus-5-5
+
+# Binance USDⓈ-M perpetuals to always include (base asset names), on top of the
+# daily top 20 by volume. Run `python -m marketwatch check` to confirm each resolves.
+watch_perps:
+  - BTC
+  - ETH
+  - ZEC
+  - XRP
+  - SNDK
+  - KORU
+  - HYPE
+  - SOXL
+  - SKHY
+  - PUMP
+  - XAU
+  - CRCL
+  - ONDO
+  - FARTCOIN
+  - JUP
+  - UNITREE
+  - KMNO
+  - SKR
+
+# Solana tokens tracked on DEX by mint address (tickers collide, addresses don't).
+memecoins:
+  - symbol: FARTCOIN
+    mint: 9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump
+  - symbol: KIMCHI
+    mint: CSocnzcRpgSCr1naKcNTieWZUxb6rABe45j844m7pump
+  - symbol: NEET
+    mint: Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump
+
+# Headline sources for the "Yesterday" section.
+news_feeds:
+  - https://www.coindesk.com/arc/outboundfeeds/rss/
+  - https://www.theblock.co/rss.xml
+  - https://decrypt.co/feed
+  - https://cointelegraph.com/rss
+  - https://www.cnbc.com/id/20910258/device/rss/rss.html   # CNBC Economy
+  - https://www.cnbc.com/id/100003114/device/rss/rss.html  # CNBC Top News
+  - https://feeds.content.dowjones.io/public/rss/mw_topstories  # MarketWatch
+
+# Economic calendar: which countries/impacts to show.
+calendar:
+  countries_all_impacts: [USD]          # High + Medium
+  countries_high_only: [EUR, JPY, CNY, GBP]

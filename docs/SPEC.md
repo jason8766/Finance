@@ -68,12 +68,14 @@ liquidation / flow-driven"). Never invent a reason.
 
 - **Top 20** Binance USDⓈ-M perpetuals by 24h quote volume, stablecoins excluded,
   refreshed daily at brief time.
-- **Watchlist** (user-edited, `config/watchlist.yaml`):
-  - Perps: user-specified symbols
+- **Watchlist** (user-edited, `config/config.yaml`):
+  - Perps: BTC, ETH, ZEC, XRP, SNDK, KORU, HYPE, SOXL, SKHY, PUMP, XAU, CRCL, ONDO,
+    FARTCOIN, JUP, UNITREE, KMNO, SKR (resolved against Binance's live contract list;
+    `python -m marketwatch check` reports any that don't match)
   - Solana memecoins (tracked by mint address, never by ticker — tickers collide):
     - FARTCOIN — `9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump` (also has a Binance perp)
-    - KIMCHI — mint address TBD (several tokens share this name)
-    - NEET — mint address TBD
+    - KIMCHI — `CSocnzcRpgSCr1naKcNTieWZUxb6rABe45j844m7pump`
+    - NEET — `Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump`
 
 ## Architecture
 
@@ -106,7 +108,10 @@ US-only free tiers can't reach the futures API.
 | Small VPS in Tokyo / Singapore | ~$4–6 / mo | Fallback if Oracle fails. Verify Binance reachability before committing. |
 | Fly.io / Railway / Render / Koyeb | — | No free always-on worker anymore; some regions blocked by Binance. |
 
-Plus: Claude API usage (small; brief once a day + a few alert explanations).
+Plus: Claude API usage. The brief makes one call per day (~15-25K input tokens):
+roughly $3-5/month on `claude-opus-5-5`, about $0.10/month on `claude-haiku-5-5`
+(set `llm_model` in `config/config.yaml`). Without an API key the brief still
+runs, showing raw headlines instead of commentary.
 
 ## Phases
 

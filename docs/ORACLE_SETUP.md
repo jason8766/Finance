@@ -203,18 +203,9 @@ git clone git@github.com:jason8766/Finance.git ~/Finance
 
 (Public repo? Just `git clone https://github.com/jason8766/Finance.git ~/Finance`.)
 
-## 10. Running the app (after Phase 1 is merged)
+## 10. Install and schedule the daily brief
 
-The app will run as a systemd service so it starts on boot and restarts on
-crash. Exact commands will ship with Phase 1; it will look like:
-
-```bash
-cd ~/Finance && git pull
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-sudo cp deploy/marketwatch.service /etc/systemd/system/
-sudo systemctl enable --now marketwatch
-journalctl -u marketwatch -f        # live logs
-```
+See [DEPLOY.md](DEPLOY.md).
 
 ---
 
