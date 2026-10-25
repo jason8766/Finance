@@ -25,6 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # httpx logs every request URL at INFO, and Telegram URLs contain the bot token.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     settings = load_settings()
 
     if args.cmd == "brief":
@@ -71,7 +73,14 @@ def check(settings) -> int:
     step("DexScreener", memes)
     step("Fear & Greed", lambda: sentiment.fear_greed())
     step("CoinGecko global", lambda: f"BTC dom {sentiment.global_market()['btc_dominance_pct']:.1f}%")
-    step("Economic calendar", lambda: f"{len(econ_calendar.fetch_events())} events")
+
+    def calendar():
+        n = len(econ_calendar.fetch_events())
+        if n == 0:
+            raise RuntimeError("feed returned no events")
+        return f"{n} events"
+
+    step("Economic calendar", calendar)
     step("News feeds", lambda: f"{len(news.fetch_headlines(settings.news_feeds, news.last_24h()))} headlines in last 24h")
     step("Telegram bot", lambda: "@" + telegram.get_me(settings.telegram_token)["username"])
     print(("✅" if settings.telegram_chat_id else "❌") + " TELEGRAM_CHAT_ID set")

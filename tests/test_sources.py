@@ -85,3 +85,37 @@ def test_dex_best_pair_picks_deepest_liquidity_for_mint():
     row = dex.best_pair({"symbol": "X", "mint": mint}, pairs)
     assert row["found"] and row["price_usd"] == 0.02 and row["change_24h_pct"] == -3
     assert dex.best_pair({"symbol": "Y", "mint": "NONE"}, pairs)["found"] is False
+
+
+def test_calendar_cache_ttl_fallback_and_merge(tmp_path, monkeypatch):
+    path = tmp_path / "calendar.json"
+    t0 = datetime(2026, 10, 25, 7, 0, tzinfo=timezone.utc)
+    week1 = [{"title": "CPI", "country": "USD", "date": "2026-10-27T08:30:00-04:00", "impact": "High"}]
+    old = [{"title": "Old", "country": "USD", "date": "2026-10-01T08:30:00-04:00", "impact": "High"}]
+    calls = []
+
+    def download(result):
+        def fn():
+            calls.append(1)
+            return None if result is None else [dict(r) for r in result]
+        return fn
+
+    # No cache and feed down: a clear error, not a silent empty calendar.
+    monkeypatch.setattr(econ_calendar, "_download", download(None))
+    try:
+        econ_calendar.fetch_events(path, t0)
+        raise AssertionError("expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    monkeypatch.setattr(econ_calendar, "_download", download(week1 + old))
+    assert [e["title"] for e in econ_calendar.fetch_events(path, t0)] == ["CPI"]  # stale row pruned
+
+    # Within the TTL the feed is not hit again.
+    calls.clear()
+    econ_calendar.fetch_events(path, t0 + timedelta(minutes=30))
+    assert calls == []
+
+    # After the TTL a refused download (429) falls back to the cached copy.
+    monkeypatch.setattr(econ_calendar, "_download", download(None))
+    assert [e["title"] for e in econ_calendar.fetch_events(path, t0 + timedelta(hours=2))] == ["CPI"]

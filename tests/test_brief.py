@@ -131,3 +131,17 @@ def test_formatters():
     assert brief.fmt_usd(2.41e12) == "$2.41T"
     assert brief.fmt_usd(210_000) == "$210.0K"
     assert brief.fmt_funding(-0.00025) == "−0.025%"
+
+
+def test_telegram_errors_never_contain_token(monkeypatch):
+    token = "123456:SECRET-token"
+
+    def boom(url, **kwargs):
+        raise telegram.httpx.ConnectError(f"cannot reach {url}")
+
+    monkeypatch.setattr(telegram.httpx, "post", boom)
+    try:
+        telegram.get_me(token)
+        raise AssertionError("expected RuntimeError")
+    except RuntimeError as e:
+        assert token not in str(e) and "<bot-token>" in str(e)

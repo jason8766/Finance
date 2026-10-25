@@ -71,4 +71,11 @@ Model and cost are set by `llm_model` in `config/config.yaml`:
 ```bash
 cd ~/Finance && git pull && .venv/bin/pip install -r requirements.txt
 ```
+
+If the repo is private, `git pull` over HTTPS fails. Add a read-only deploy key
+(ORACLE_SETUP.md step 9), then switch the server's copy to SSH once:
+```bash
+cd ~/Finance && git remote set-url origin git@github.com:jason8766/Finance.git
+git pull
+```
 The timer picks up new code automatically on its next run.
