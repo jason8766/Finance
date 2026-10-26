@@ -55,7 +55,26 @@ sudo systemctl start marketwatch-brief.service    # send a brief right now
 journalctl -u marketwatch-brief -n 50             # logs of the last runs
 ```
 
-## 6. Turn on AI commentary (optional, paid)
+## 6. Start the 24/7 monitor (move alerts + event reminders)
+
+```bash
+cd ~/Finance && .venv/bin/pip install -r requirements.txt   # adds the websocket library
+sudo cp deploy/marketwatch-monitor.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now marketwatch-monitor.service
+systemctl status marketwatch-monitor --no-pager             # should say "active (running)"
+journalctl -u marketwatch-monitor -f                        # live logs (Ctrl+C to exit)
+```
+You get a "🟢 Monitor started" message in Telegram. Price alerts start after a
+5-minute warm-up (1-hour alerts after ~50 minutes). systemd restarts it if it
+crashes and starts it again after a reboot.
+
+After a `git pull`, restart it to load new code:
+```bash
+sudo systemctl restart marketwatch-monitor
+```
+
+## 7. Turn on AI commentary (optional, paid)
 
 1. Create a key at <https://console.anthropic.com> → **API Keys**, and add a
    few dollars of credit under **Billing**. Set a monthly limit there too.
@@ -78,4 +97,5 @@ If the repo is private, `git pull` over HTTPS fails. Add a read-only deploy key
 cd ~/Finance && git remote set-url origin git@github.com:jason8766/Finance.git
 git pull
 ```
-The timer picks up new code automatically on its next run.
+The brief timer picks up new code on its next run; restart the monitor
+(`sudo systemctl restart marketwatch-monitor`).

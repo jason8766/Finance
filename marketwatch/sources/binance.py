@@ -46,6 +46,30 @@ def fetch_market(watch_bases: list[str]) -> dict:
     }
 
 
+def universe(watch_bases: list[str]) -> tuple[list[str], list[str], list[str]]:
+    """(top-20 symbols, resolved watchlist symbols, unresolved watchlist names)."""
+    with client() as c:
+        info = c.get(f"{BASE}/fapi/v1/exchangeInfo").raise_for_status().json()
+        tickers = c.get(f"{BASE}/fapi/v1/ticker/24hr").raise_for_status().json()
+    perps = tradable_perps(info)
+    top = top_by_volume(perps, {t["symbol"]: t for t in tickers}, n=20)
+    resolved, missing = resolve_bases(watch_bases, perps)
+    return top, list(resolved.values()), missing
+
+
+def all_prices() -> dict[str, float]:
+    with client(timeout=10) as c:
+        rows = c.get(f"{BASE}/fapi/v1/ticker/price").raise_for_status().json()
+    return {r["symbol"]: float(r["price"]) for r in rows}
+
+
+def open_interest(symbol: str) -> float:
+    """Open interest in contracts (base units)."""
+    with client(timeout=10) as c:
+        oi = c.get(f"{BASE}/fapi/v1/openInterest", params={"symbol": symbol}).raise_for_status().json()
+    return float(oi["openInterest"])
+
+
 def tradable_perps(exchange_info: dict) -> dict[str, dict]:
     """symbol -> exchangeInfo row, for perpetual contracts currently trading."""
     return {

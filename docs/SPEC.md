@@ -115,9 +115,15 @@ runs, showing raw headlines instead of commentary.
 
 ## Phases
 
-1. Daily Brief + calendar → Telegram
-2. Event Reminders (pre-event + actual vs forecast)
-3. Move Alerts (rules only) — CEX perps
-4. LLM "why" analysis on alerts
-5. Solana memecoin monitoring (DEX)
+1. ✅ Daily Brief + calendar → Telegram
+2. ✅ Event Reminders: 30 min before each high-impact release, and a reaction note
+   (BTC move since release) 3–15 min after. The free calendar feed has no
+   "actual" figure, so the note links to Forex Factory for it.
+3. ✅ Move Alerts (rules only): CEX perps, liquidation spikes (Binance forceOrder
+   stream, a lower bound: Binance sends at most one liquidation per symbol per
+   second), BTC open-interest spikes, market-wide merge, 30-min cooldowns
+4. LLM "why" analysis on alerts (today: a rule-based "Read:" line plus the last
+   hour's headlines)
+5. ✅ Solana memecoin monitoring (DexScreener, 60 s): price moves + liquidity-drop
+   (rug) warnings. Not yet: 5× volume-spike trigger.
 6. Later: positions via read-only Binance key ("this affects your ETH long")

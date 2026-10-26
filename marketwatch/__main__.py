@@ -3,6 +3,7 @@
     python -m marketwatch brief             build and send the daily brief
     python -m marketwatch brief --dry-run   print it instead of sending
     python -m marketwatch brief --no-llm    skip Claude (headlines only)
+    python -m marketwatch monitor           run the 24/7 alert monitor
     python -m marketwatch check             verify every data source and secret
 """
 
@@ -10,9 +11,9 @@ import argparse
 import logging
 import sys
 
-from . import brief, telegram
+from . import brief, monitor, telegram
 from .config import load_settings
-from .sources import binance, dex, econ_calendar, news, sentiment
+from .sources import binance, dex, econ_calendar, liquidations, news, sentiment
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,6 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     p_brief = sub.add_parser("brief", help="build and send the daily brief")
     p_brief.add_argument("--dry-run", action="store_true", help="print instead of sending")
     p_brief.add_argument("--no-llm", action="store_true", help="skip Claude commentary")
+    sub.add_parser("monitor", help="run the 24/7 alert monitor")
     sub.add_parser("check", help="verify data sources, watchlist and secrets")
     args = parser.parse_args(argv)
 
@@ -39,6 +41,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         telegram.send(settings.telegram_token, settings.telegram_chat_id, text)
         logging.info("brief sent (%d chars)", len(text))
+        return 0
+
+    if args.cmd == "monitor":
+        if not (settings.telegram_token and settings.telegram_chat_id):
+            print("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing in .env", file=sys.stderr)
+            return 1
+        monitor.run(settings)
         return 0
 
     if args.cmd == "check":
@@ -70,6 +79,7 @@ def check(settings) -> int:
         return ", ".join(f"{r['symbol']}={'ok' if r['found'] else 'NOT FOUND'}" for r in rows)
 
     step("Binance futures", market)
+    step("Liquidation stream", liquidations.probe)
     step("DexScreener", memes)
     step("Fear & Greed", lambda: sentiment.fear_greed())
     step("CoinGecko global", lambda: f"BTC dom {sentiment.global_market()['btc_dominance_pct']:.1f}%")
