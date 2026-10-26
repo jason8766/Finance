@@ -29,6 +29,8 @@ MARKET_WIDE_MIN = 5            # this many simultaneous alerts become one messag
 LIQ_ALERT_USD = 50e6           # liquidations in 5 min
 OI_ALERT_PCT = 3.0             # BTC open interest change in 15 min
 OUTAGE_WARN_S = 120            # tell the user if Binance is unreachable this long
+SEND_BUDGET = 20               # at most this many messages ...
+SEND_WINDOW_S = 600            # ... per 10 minutes; extras are dropped, not queued
 
 
 class Monitor:
@@ -50,6 +52,8 @@ class Monitor:
         self._headlines: tuple[float, list[dict]] = (0.0, [])
         self.last_price_ok = time.time()
         self.outage_reported = False
+        self.recent_sends: list[float] = []
+        self.muted_notice_sent = False
 
     # ---------- main loop ----------
 
@@ -281,10 +285,30 @@ class Monitor:
     # ---------- plumbing ----------
 
     def _telegram_send(self, html: str) -> None:
+        if not self._within_budget(time.time()):
+            return
         try:
             telegram.send(self.settings.telegram_token, self.settings.telegram_chat_id, html)
         except Exception:  # noqa: BLE001 - a failed send must not stop monitoring
             log.exception("telegram send failed")
+
+    def _within_budget(self, now: float) -> bool:
+        """Never flood the chat: past the budget, send one notice and drop the rest."""
+        self.recent_sends = [t for t in self.recent_sends if t > now - SEND_WINDOW_S]
+        if len(self.recent_sends) < SEND_BUDGET:
+            self.recent_sends.append(now)
+            self.muted_notice_sent = False
+            return True
+        if not self.muted_notice_sent:
+            self.muted_notice_sent = True
+            log.warning("alert budget exhausted; muting for up to %d min", SEND_WINDOW_S // 60)
+            try:
+                telegram.send(self.settings.telegram_token, self.settings.telegram_chat_id,
+                              f"🔇 <b>Too many alerts</b> — muting for up to {SEND_WINDOW_S // 60} min. "
+                              "The market is moving hard; check charts directly.")
+            except Exception:  # noqa: BLE001
+                log.exception("telegram send failed")
+        return False
 
     def _load_sent(self) -> set[str]:
         try:

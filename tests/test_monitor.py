@@ -110,3 +110,27 @@ def test_memecoin_move_and_rug_warning(mon, monkeypatch):
     mon.tick_memes(T0 + 360)
     assert any("🔴🐸 <b>KIMCHI −15.0%" in s for s in mon.sent)
     assert any("KIMCHI liquidity −40%" in s for s in mon.sent)
+
+
+def test_send_budget_mutes_floods(monkeypatch, tmp_path):
+    delivered = []
+    monkeypatch.setattr(monitor.telegram, "send", lambda token, chat, html: delivered.append(html))
+    m = monitor.Monitor(Settings(), state_path=tmp_path / "r.json")
+    clock = iter(range(1000, 2000))
+    monkeypatch.setattr(monitor.time, "time", lambda: next(clock))
+    for i in range(30):
+        m.send(f"alert {i}")
+    assert len(delivered) == monitor.SEND_BUDGET + 1
+    assert "Too many alerts" in delivered[-1]
+
+
+def test_telegram_retries_after_rate_limit(monkeypatch):
+    responses = [
+        monitor.telegram.httpx.Response(429, json={"ok": False, "parameters": {"retry_after": 2}}),
+        monitor.telegram.httpx.Response(200, json={"ok": True}),
+    ]
+    slept = []
+    monkeypatch.setattr(monitor.telegram, "_call", lambda *a: responses.pop(0))
+    monkeypatch.setattr(monitor.telegram.time, "sleep", slept.append)
+    monitor.telegram.send("t", "c", "hi")
+    assert slept == [2] and responses == []

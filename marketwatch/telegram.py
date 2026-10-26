@@ -2,6 +2,7 @@
 
 import logging
 import re
+import time
 
 import httpx
 
@@ -24,6 +25,12 @@ def _send_chunk(token: str, chat_id: str, html: str) -> None:
         "link_preview_options": {"is_disabled": True},
     }
     r = _call(token, "sendMessage", payload)
+    if r.status_code == 429:
+        # Rate limited: wait as told (capped) and try once more.
+        retry_after = (r.json().get("parameters") or {}).get("retry_after", 5)
+        log.warning("Telegram rate limit; retrying in %ss", retry_after)
+        time.sleep(min(retry_after, 30))
+        r = _call(token, "sendMessage", payload)
     if r.status_code == 400 and "parse" in r.text.lower():
         # Malformed markup should never cost us the message: resend as plain text.
         log.warning("Telegram rejected HTML (%s); resending as plain text", r.text[:200])
