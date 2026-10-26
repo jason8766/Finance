@@ -1,0 +1,14 @@
+[Unit]
+Description=Crypto Market Watch 24/7 alert monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/Finance
+ExecStart=/home/ubuntu/Finance/.venv/bin/python -m marketwatch monitor
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
